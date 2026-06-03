@@ -17,6 +17,7 @@ router.get('/stores/:id', storeController.getStoreById);
 
 // 需要认证的接口
 router.get('/orders', authMiddleware, orderController.getOrders);
+router.post('/orders', authMiddleware, orderController.createOrder);
 router.get('/coupons', authMiddleware, couponController.getCoupons);
 
 module.exports = router;

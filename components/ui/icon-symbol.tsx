@@ -15,13 +15,31 @@ export function IconSymbol({
   style?: any;
   weight?: string;
 }) {
+  // 映射图标名称到 SF Symbols (iOS) 和 Material Icons (Android/Web)
+  const sfSymbolMap: Record<string, string> = {
+    'house.fill': 'house.fill',
+    'menu-card': 'cup.and.saucer.fill',
+    'receipt': 'receipt',
+    'cart': 'cart',
+    'person': 'person',
+  };
+
+  const materialIconMap: Record<string, string> = {
+    'house.fill': 'home',
+    'menu-card': 'local-cafe',
+    'receipt': 'receipt',
+    'cart': 'shopping-cart',
+    'person': 'person',
+  };
+
   if (Platform.OS === 'ios') {
+    const sfSymbolName = sfSymbolMap[name] || name;
     return (
       <SymbolView
         weight={weight}
         tintColor={color}
         resizeMode="scaleAspectFit"
-        name={name as any}
+        name={sfSymbolName as any}
         style={[
           {
             width: size,
@@ -33,19 +51,7 @@ export function IconSymbol({
     );
   }
 
-  // 映射 SF Symbols 到 Material Icons
-  const iconMap: Record<string, string> = {
-    'house.fill': 'home',
-    'paperplane.fill': 'send',
-    'chevron.left.forwardslash.chevron.right': 'code',
-    'chevron.right': 'chevron-right',
-    'menu': 'menu-book',
-    'receipt': 'receipt',
-    'cart': 'shopping-cart',
-    'person': 'person',
-  };
-
-  const materialIconName = iconMap[name] || 'help-outline';
+  const materialIconName = materialIconMap[name] || 'help-outline';
 
   return (
     <MaterialIcons

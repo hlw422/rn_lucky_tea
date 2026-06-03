@@ -36,7 +36,7 @@ export default function TabLayout() {
         name="menu"
         options={{
           title: '菜单',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="menu" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="menu-card" color={color} />,
         }}
       />
       <Tabs.Screen
