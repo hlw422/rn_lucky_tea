@@ -25,7 +25,7 @@ export const AddressRow: React.FC<AddressRowProps> = ({
       </View>
       
       <View style={styles.right}>
-        <Text style={styles.distance}>{store.distance}</Text>
+        <Text style={styles.distance}>{store.distanceText || '未知'}</Text>
       </View>
     </TouchableOpacity>
   );

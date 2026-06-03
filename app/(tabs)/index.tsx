@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BrandColors } from '../../constants/colors';
 import { Swiper } from '../../components/ui/Swiper';
 import { Row } from '../../components/ui/Row';
 import { TakeOutToggle } from '../../components/TakeOutToggle';
+import { useStoreStore } from '../../stores/store-store';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -24,6 +25,14 @@ const quickActions = [
 export default function HomeScreen() {
   const router = useRouter();
   const [orderType, setOrderType] = useState<'pickup' | 'delivery'>('pickup');
+  const { stores, fetchStores } = useStoreStore();
+
+  useEffect(() => {
+    fetchStores();
+  }, []);
+
+  // 获取最近的门店
+  const nearestStore = stores.length > 0 ? stores[0] : null;
 
   return (
     <ScrollView style={styles.container}>
@@ -42,8 +51,12 @@ export default function HomeScreen() {
         <Row
           leftChild={
             <View>
-              <Text style={styles.storeName}>火车南站</Text>
-              <Text style={styles.storeDistance}>距您53m</Text>
+              <Text style={styles.storeName}>
+                {nearestStore ? nearestStore.name : '加载中...'}
+              </Text>
+              <Text style={styles.storeDistance}>
+                {nearestStore?.distanceText ? `距您${nearestStore.distanceText}` : '获取位置中...'}
+              </Text>
             </View>
           }
           rightChild={

@@ -1,65 +1,70 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   View, 
   Text, 
   FlatList, 
   TouchableOpacity, 
-  StyleSheet 
+  StyleSheet,
+  ActivityIndicator 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BrandColors } from '../../constants/colors';
 import { AddressRow } from '../../components/AddressRow';
+import { useStoreStore } from '../../stores/store-store';
 import type { Store } from '../../types';
-
-// 门店数据（本地数据源）
-const stores: Store[] = [
-  {
-    id: 1,
-    name: '青年汇店(No.1795)',
-    address: '北京市朝阳区青年路青年汇佳园底商',
-    distance: '53m',
-    businessHours: '07:00-22:00',
-    phone: '010-12345678',
-  },
-  {
-    id: 2,
-    name: '国贸店(No.1234)',
-    address: '北京市朝阳区国贸大厦B座1层',
-    distance: '1.2km',
-    businessHours: '07:30-21:00',
-    phone: '010-87654321',
-  },
-  {
-    id: 3,
-    name: '三里屯店(No.5678)',
-    address: '北京市朝阳区三里屯太古里南区',
-    distance: '2.5km',
-    businessHours: '08:00-23:00',
-    phone: '010-11223344',
-  },
-  {
-    id: 4,
-    name: '望京店(No.9012)',
-    address: '北京市朝阳区望京SOHO T1',
-    distance: '3.8km',
-    businessHours: '07:00-21:30',
-    phone: '010-55667788',
-  },
-  {
-    id: 5,
-    name: '中关村店(No.3456)',
-    address: '北京市海淀区中关村大街1号',
-    distance: '5.2km',
-    businessHours: '07:30-22:00',
-    phone: '010-99887766',
-  },
-];
 
 export default function StoreListScreen() {
   const router = useRouter();
+  const { stores, loading, error, fetchStores } = useStoreStore();
+
+  useEffect(() => {
+    fetchStores();
+  }, []);
 
   const handleStorePress = (store: Store) => {
     router.push(`/store/detail?id=${store.id}`);
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={BrandColors.primary} />
+          <Text style={styles.loadingText}>加载门店中...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchStores}>
+            <Text style={styles.retryText}>重试</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <FlatList
+        data={stores}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <AddressRow
+            store={item}
+            onPress={() => handleStorePress(item)}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <View style={styles.centerContainer}>
+            <Text style={styles.emptyText}>暂无门店数据</Text>
+          </View>
+        }
+      />
+    );
   };
 
   return (
@@ -74,18 +79,7 @@ export default function StoreListScreen() {
       </View>
 
       {/* 门店列表 */}
-      <FlatList
-        data={stores}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <AddressRow
-            store={item}
-            onPress={() => handleStorePress(item)}
-          />
-        )}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-      />
+      {renderContent()}
     </View>
   );
 }
@@ -124,5 +118,35 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: 10,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: BrandColors.textSecondary,
+    fontSize: 14,
+  },
+  errorText: {
+    color: '#ff3b30',
+    fontSize: 14,
+    marginBottom: 15,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: BrandColors.primary,
+    borderRadius: 20,
+  },
+  retryText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  emptyText: {
+    color: BrandColors.textSecondary,
+    fontSize: 14,
   },
 });

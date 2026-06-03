@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { BrandColors } from '../../constants/colors';
 import { useCartStore } from '../../stores/cart-store';
 import { useOrderStore } from '../../stores/order-store';
+import { useStoreStore } from '../../stores/store-store';
 import { Button } from '../../components/ui/Button';
 import { Row } from '../../components/ui/Row';
 
@@ -18,12 +19,17 @@ export default function OrderConfirmScreen() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { createOrder } = useOrderStore();
+  const { stores, selectedStore, fetchStores } = useStoreStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const storeInfo = {
-    name: '青年汇店(No.1795)',
-    address: '北京市朝阳区青年路青年汇佳园底商',
-  };
+  useEffect(() => {
+    if (stores.length === 0) {
+      fetchStores();
+    }
+  }, []);
+
+  // 使用选中的门店或最近的门店
+  const storeInfo = selectedStore || (stores.length > 0 ? stores[0] : null);
 
   const totalPrice = getTotalPrice();
   const deliveryFee = 0;
@@ -33,6 +39,11 @@ export default function OrderConfirmScreen() {
   const handleConfirm = async () => {
     if (items.length === 0) {
       Alert.alert('提示', '购物车为空');
+      return;
+    }
+
+    if (!storeInfo) {
+      Alert.alert('提示', '请选择门店');
       return;
     }
 
@@ -83,8 +94,12 @@ export default function OrderConfirmScreen() {
             leftChild={<Text style={styles.storeIcon}>📍</Text>}
             centerChild={
               <View>
-                <Text style={styles.storeName}>{storeInfo.name}</Text>
-                <Text style={styles.storeAddress}>{storeInfo.address}</Text>
+                <Text style={styles.storeName}>
+                  {storeInfo ? storeInfo.name : '请选择门店'}
+                </Text>
+                <Text style={styles.storeAddress}>
+                  {storeInfo ? storeInfo.address : '点击选择附近门店'}
+                </Text>
               </View>
             }
             rightChild={<Text style={styles.arrow}>›</Text>}

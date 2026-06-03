@@ -55,7 +55,10 @@ export interface Store {
   id: number;
   name: string;
   address: string;
-  distance: string;
+  latitude: number;
+  longitude: number;
+  distance?: number; // 距离（米），由后端计算
+  distanceText?: string; // 距离文字，如"500m"
   businessHours: string;
   phone: string;
 }

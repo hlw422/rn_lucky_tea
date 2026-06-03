@@ -91,6 +91,21 @@ async function initDatabase() {
   `);
   console.log('✓ coupons 表已创建');
 
+  // 门店表
+  await conn.execute(`
+    CREATE TABLE IF NOT EXISTS stores (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(200) NOT NULL,
+      address VARCHAR(500) NOT NULL,
+      latitude DECIMAL(10,7) NOT NULL,
+      longitude DECIMAL(10,7) NOT NULL,
+      business_hours VARCHAR(100) DEFAULT '07:00-22:00',
+      phone VARCHAR(20) DEFAULT '',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  console.log('✓ stores 表已创建');
+
   // ========== 种子数据 ==========
 
   // 检查是否已有数据
@@ -177,6 +192,22 @@ async function initDatabase() {
     );
   }
   console.log('✓ 优惠券数据已插入');
+
+  // 插入门店数据（真实瑞幸咖啡门店位置）
+  const stores = [
+    ['瑞幸咖啡(国贸店)', '北京市朝阳区建国门外大街1号国贸写字楼1座B1层', 39.9086900, 116.4605600, '07:00-21:00', '010-65051888'],
+    ['瑞幸咖啡(望京SOHO店)', '北京市朝阳区阜通东大街6号院望京SOHO T1-B1', 39.9942100, 116.4809800, '07:00-22:00', '010-64706688'],
+    ['瑞幸咖啡(中关村店)', '北京市海淀区中关村大街27号中关村大厦1层', 39.9816400, 116.3114200, '07:00-21:30', '010-82628888'],
+    ['瑞幸咖啡(三里屯店)', '北京市朝阳区三里屯路19号三里屯太古里南区B1', 39.9339500, 116.4542700, '08:00-22:00', '010-64168888'],
+    ['瑞幸咖啡(西单店)', '北京市西城区西单北大街110号西单大悦城B1', 39.9104200, 116.3741800, '07:30-21:30', '010-66018888'],
+  ];
+  for (const [name, address, lat, lng, hours, phone] of stores) {
+    await conn.execute(
+      'INSERT INTO stores (name, address, latitude, longitude, business_hours, phone) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, address, lat, lng, hours, phone]
+    );
+  }
+  console.log('✓ 门店数据已插入');
 
   console.log('\n数据库初始化完成！');
   await conn.end();

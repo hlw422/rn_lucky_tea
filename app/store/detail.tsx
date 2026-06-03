@@ -1,68 +1,57 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   StyleSheet,
-  Linking 
+  Linking,
+  ActivityIndicator,
+  Platform 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BrandColors } from '../../constants/colors';
 import { Button } from '../../components/ui/Button';
-import type { Store } from '../../types';
+import { useStoreStore } from '../../stores/store-store';
+import { openNavigation } from '../../utils/location';
 
-// 门店数据（本地数据源）
-const stores: Store[] = [
-  {
-    id: 1,
-    name: '青年汇店(No.1795)',
-    address: '北京市朝阳区青年路青年汇佳园底商',
-    distance: '53m',
-    businessHours: '07:00-22:00',
-    phone: '010-12345678',
-  },
-  {
-    id: 2,
-    name: '国贸店(No.1234)',
-    address: '北京市朝阳区国贸大厦B座1层',
-    distance: '1.2km',
-    businessHours: '07:30-21:00',
-    phone: '010-87654321',
-  },
-  {
-    id: 3,
-    name: '三里屯店(No.5678)',
-    address: '北京市朝阳区三里屯太古里南区',
-    distance: '2.5km',
-    businessHours: '08:00-23:00',
-    phone: '010-11223344',
-  },
-  {
-    id: 4,
-    name: '望京店(No.9012)',
-    address: '北京市朝阳区望京SOHO T1',
-    distance: '3.8km',
-    businessHours: '07:00-21:30',
-    phone: '010-55667788',
-  },
-  {
-    id: 5,
-    name: '中关村店(No.3456)',
-    address: '北京市海淀区中关村大街1号',
-    distance: '5.2km',
-    businessHours: '07:30-22:00',
-    phone: '010-99887766',
-  },
-];
+// Web端不导入react-native-maps
+let MapView: any = null;
+let Marker: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    const maps = require('react-native-maps');
+    MapView = maps.default;
+    Marker = maps.Marker;
+  } catch (e) {
+    console.log('react-native-maps not available');
+  }
+}
 
 export default function StoreDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { selectedStore: store, loading, error, fetchStoreById } = useStoreStore();
 
-  const store = stores.find(s => s.id === Number(id));
+  useEffect(() => {
+    if (id) {
+      fetchStoreById(Number(id));
+    }
+  }, [id]);
 
-  if (!store) {
+  const handleCall = () => {
+    if (store?.phone) {
+      Linking.openURL(`tel:${store.phone}`);
+    }
+  };
+
+  const handleNavigate = async () => {
+    if (store) {
+      await openNavigation(store.latitude, store.longitude, store.name);
+    }
+  };
+
+  if (loading) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -72,21 +61,30 @@ export default function StoreDetailScreen() {
           <Text style={styles.headerTitle}>门店详情</Text>
           <View style={styles.placeholder} />
         </View>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>门店不存在</Text>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={BrandColors.primary} />
+          <Text style={styles.loadingText}>加载中...</Text>
         </View>
       </View>
     );
   }
 
-  const handleCall = () => {
-    Linking.openURL(`tel:${store.phone}`);
-  };
-
-  const handleNavigate = () => {
-    // 打开地图导航
-    Alert.alert('提示', '正在打开导航...');
-  };
+  if (error || !store) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={styles.backText}>‹</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>门店详情</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{error || '门店不存在'}</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -100,10 +98,35 @@ export default function StoreDetailScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* 门店地图占位 */}
-        <View style={styles.mapPlaceholder}>
-          <Text style={styles.mapIcon}>🗺️</Text>
-          <Text style={styles.mapText}>地图加载中...</Text>
+        {/* 地图区域 */}
+        <View style={styles.mapContainer}>
+          {Platform.OS !== 'web' ? (
+            <MapView
+              style={styles.map}
+              initialRegion={{
+                latitude: store.latitude,
+                longitude: store.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+            >
+              <Marker
+                coordinate={{
+                  latitude: store.latitude,
+                  longitude: store.longitude,
+                }}
+                title={store.name}
+                description={store.address}
+              />
+            </MapView>
+          ) : (
+            // Web 端显示静态地图占位
+            <View style={styles.mapWebPlaceholder}>
+              <Text style={styles.mapIcon}>📍</Text>
+              <Text style={styles.mapWebText}>地图仅在移动设备显示</Text>
+              <Text style={styles.mapWebHint}>点击下方按钮打开导航</Text>
+            </View>
+          )}
         </View>
 
         {/* 门店信息 */}
@@ -125,10 +148,12 @@ export default function StoreDetailScreen() {
             <Text style={styles.infoText}>{store.phone}</Text>
           </View>
           
-          <View style={styles.infoRow}>
-            <Text style={styles.infoIcon}>📏</Text>
-            <Text style={styles.infoText}>距离您: {store.distance}</Text>
-          </View>
+          {store.distanceText && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoIcon}>📏</Text>
+              <Text style={styles.infoText}>距离您: {store.distanceText}</Text>
+            </View>
+          )}
         </View>
 
         {/* 操作按钮 */}
@@ -187,27 +212,44 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  emptyContainer: {
+  centerContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  emptyText: {
-    fontSize: 16,
+  loadingText: {
+    marginTop: 10,
     color: BrandColors.textSecondary,
+    fontSize: 14,
   },
-  mapPlaceholder: {
-    height: 200,
-    backgroundColor: BrandColors.backgroundSecondary,
-    alignItems: 'center',
+  errorText: {
+    color: '#ff3b30',
+    fontSize: 16,
+  },
+  mapContainer: {
+    height: 250,
+    backgroundColor: '#e8e8e8',
+  },
+  map: {
+    flex: 1,
+  },
+  mapWebPlaceholder: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
   mapIcon: {
-    fontSize: 50,
+    fontSize: 48,
     marginBottom: 10,
   },
-  mapText: {
-    fontSize: 14,
+  mapWebText: {
+    fontSize: 16,
+    color: BrandColors.text,
+    marginBottom: 5,
+  },
+  mapWebHint: {
+    fontSize: 13,
     color: BrandColors.textSecondary,
   },
   section: {
