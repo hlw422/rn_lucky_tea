@@ -1,8 +1,8 @@
+import { HapticTab } from '@/components/haptic-tab';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { BrandColors } from '../../constants/colors';
 
 export default function TabLayout() {
@@ -36,7 +36,7 @@ export default function TabLayout() {
         name="menu"
         options={{
           title: '菜单',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="menu-card" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="list.bullet" color={color} />,
         }}
       />
       <Tabs.Screen
