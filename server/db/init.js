@@ -30,11 +30,23 @@ async function initDatabase() {
       password VARCHAR(255) NOT NULL,
       name VARCHAR(100) NOT NULL,
       avatar VARCHAR(500) DEFAULT NULL,
+      role VARCHAR(20) DEFAULT 'user',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
   `);
   console.log('✓ users 表已创建');
+
+  // 如果表已存在但没有 role 字段，添加该字段
+  try {
+    await conn.execute(`ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user'`);
+    console.log('✓ users 表已添加 role 字段');
+  } catch (err) {
+    // 字段已存在时忽略错误
+    if (err.code !== 'ER_DUP_FIELDNAME') {
+      throw err;
+    }
+  }
 
   // 商品分类表
   await conn.execute(`
@@ -116,13 +128,13 @@ async function initDatabase() {
     return;
   }
 
-  // 插入测试用户
+  // 插入测试用户（管理员角色）
   const hashedPassword = await bcrypt.hash('123456', 10);
   await conn.execute(
-    'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
-    ['test@luckin.com', hashedPassword, '测试用户']
+    'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
+    ['test@luckin.com', hashedPassword, '测试用户', 'admin']
   );
-  console.log('✓ 测试用户已插入 (test@luckin.com / 123456)');
+  console.log('✓ 测试用户已插入 (test@luckin.com / 123456) [管理员]');
 
   // 插入商品分类（与原 mock 数据一致）
   const categories = [

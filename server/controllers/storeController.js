@@ -89,4 +89,90 @@ async function getStoreById(req, res) {
   }
 }
 
-module.exports = { getStores, getStoreById };
+// 管理端：获取门店列表（支持分页）
+async function getStoresForAdmin(req, res) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 20;
+    const offset = (page - 1) * pageSize;
+
+    const [rows] = await pool.execute(
+      'SELECT id, name, address, latitude, longitude, business_hours as businessHours, phone, created_at FROM stores ORDER BY id DESC LIMIT ? OFFSET ?',
+      [pageSize, offset]
+    );
+
+    const [total] = await pool.execute('SELECT COUNT(*) as count FROM stores');
+
+    res.json({
+      code: 0,
+      data: {
+        list: rows,
+        total: total[0].count,
+        page,
+        pageSize,
+      },
+    });
+  } catch (err) {
+    console.error('获取门店列表失败:', err);
+    res.status(500).json({ code: 500, message: '服务器错误' });
+  }
+}
+
+// 管理端：新增门店
+async function createStore(req, res) {
+  try {
+    const { name, address, latitude, longitude, businessHours, phone } = req.body;
+    if (!name || !address || !latitude || !longitude) {
+      return res.status(400).json({ code: 400, message: '门店名称、地址和坐标不能为空' });
+    }
+
+    const [result] = await pool.execute(
+      'INSERT INTO stores (name, address, latitude, longitude, business_hours, phone) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, address, latitude, longitude, businessHours || '07:00-22:00', phone || '']
+    );
+
+    res.json({
+      code: 0,
+      data: { id: result.insertId, name, address, latitude, longitude, businessHours, phone },
+    });
+  } catch (err) {
+    console.error('新增门店失败:', err);
+    res.status(500).json({ code: 500, message: '服务器错误' });
+  }
+}
+
+// 管理端：更新门店
+async function updateStore(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, address, latitude, longitude, businessHours, phone } = req.body;
+
+    if (!name || !address || !latitude || !longitude) {
+      return res.status(400).json({ code: 400, message: '门店名称、地址和坐标不能为空' });
+    }
+
+    await pool.execute(
+      'UPDATE stores SET name = ?, address = ?, latitude = ?, longitude = ?, business_hours = ?, phone = ? WHERE id = ?',
+      [name, address, latitude, longitude, businessHours || '07:00-22:00', phone || '', id]
+    );
+
+    res.json({ code: 0, message: '更新成功' });
+  } catch (err) {
+    console.error('更新门店失败:', err);
+    res.status(500).json({ code: 500, message: '服务器错误' });
+  }
+}
+
+// 管理端：删除门店
+async function deleteStore(req, res) {
+  try {
+    const { id } = req.params;
+    await pool.execute('DELETE FROM stores WHERE id = ?', [id]);
+    res.json({ code: 0, message: '删除成功' });
+  } catch (err) {
+    console.error('删除门店失败:', err);
+    res.status(500).json({ code: 500, message: '服务器错误' });
+  }
+}
+
+module.exports = { getStores, getStoreById, getStoresForAdmin, createStore, updateStore, deleteStore };

@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const apiRoutes = require('./routes');
+const adminRoutes = require('./routes/admin');
 const { initDatabase } = require('./db/init');
 
 const app = express();
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
 
 // 路由
 app.use('/api', apiRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {

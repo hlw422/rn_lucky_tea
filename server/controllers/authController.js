@@ -25,7 +25,7 @@ async function register(req, res) {
       [email, hashedPassword, name]
     );
 
-    const user = { id: result.insertId, email, name };
+    const user = { id: result.insertId, email, name, role: 'user' };
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({ code: 0, data: { token, user } });
@@ -54,7 +54,7 @@ async function login(req, res) {
       return res.status(401).json({ code: 401, message: '邮箱或密码错误' });
     }
 
-    const tokenUser = { id: user.id, email: user.email, name: user.name };
+    const tokenUser = { id: user.id, email: user.email, name: user.name, role: user.role || 'user' };
     const token = jwt.sign(tokenUser, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({ code: 0, data: { token, user: tokenUser } });
