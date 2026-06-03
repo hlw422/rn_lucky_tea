@@ -44,3 +44,7 @@ app-example
 
 # CodeBuddy
 .codebuddy/
+
+# Backend server
+server/.env
+server/node_modules/
