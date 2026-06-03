@@ -30,6 +30,18 @@
 - 取餐码随机生成（带倒计时）
 - 用户协议页面
 
+## 应用截图
+
+| 首页 | 菜单 | 购物车 |
+|------|------|--------|
+| ![首页](assets/screenshots/home.png) | ![菜单](assets/screenshots/menu.png) | ![购物车](assets/screenshots/cart.png) |
+
+| 订单 | 我的 | 门店详情 |
+|------|------|----------|
+| ![订单](assets/screenshots/order.png) | ![我的](assets/screenshots/mine.png) | ![门店](assets/screenshots/store.png) |
+
+> 请将截图文件放入 `assets/screenshots/` 文件夹
+
 ## 技术栈
 
 ### 前端 (Expo)
