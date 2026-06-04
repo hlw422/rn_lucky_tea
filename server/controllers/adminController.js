@@ -52,12 +52,11 @@ async function getUsers(req, res) {
     const pageSize = parseInt(req.query.pageSize) || 20;
     const offset = (page - 1) * pageSize;
 
-    const [rows] = await pool.execute(
-      'SELECT id, email, name, avatar, role, created_at FROM users ORDER BY id DESC LIMIT ? OFFSET ?',
-      [pageSize, offset]
+    const [rows] = await pool.query(
+      `SELECT id, email, name, avatar, role, created_at FROM users ORDER BY id DESC LIMIT ${pageSize} OFFSET ${offset}`
     );
 
-    const [total] = await pool.execute('SELECT COUNT(*) as count FROM users');
+    const [total] = await pool.query('SELECT COUNT(*) as count FROM users');
 
     res.json({
       code: 0,

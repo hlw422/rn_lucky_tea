@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Coffee, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { authApi } from '../api/auth';
@@ -7,6 +7,12 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('test@luckin.com');
   const [password, setPassword] = useState('123456');
+
+  // 清除旧的 token，确保重新登录
+  useEffect(() => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

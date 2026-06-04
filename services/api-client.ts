@@ -3,8 +3,8 @@ import { storage } from '../utils/storage';
 
 // Web 端使用 localhost，手机端使用电脑的局域网 IP
 const BASE_URL = Platform.OS === 'web' 
-  ? 'http://localhost:4001/api' 
-  : 'http://192.168.1.121:4001/api';
+  ? 'http://localhost:4002/api' 
+  : 'http://192.168.1.121:4002/api';
 
 class ApiClient {
   private static instance: ApiClient;

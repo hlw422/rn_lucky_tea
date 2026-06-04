@@ -4,13 +4,14 @@ import { X } from 'lucide-react';
 export interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'number' | 'select' | 'textarea';
+  type: 'text' | 'number' | 'select' | 'textarea' | 'custom';
   placeholder?: string;
   required?: boolean;
   options?: Array<{ value: string | number; label: string }>;
   min?: number;
   max?: number;
   step?: number;
+  render?: (value: any, onChange: (value: any) => void) => React.ReactNode;
 }
 
 interface FormModalProps {
@@ -54,8 +55,16 @@ export default function FormModal({
     // 验证必填字段
     const newErrors: Record<string, string> = {};
     fields.forEach(field => {
-      if (field.required && !values[field.name] && values[field.name] !== 0) {
-        newErrors[field.name] = `${field.label}不能为空`;
+      if (field.required) {
+        const value = values[field.name];
+        // 对于custom类型（如location对象），检查是否存在
+        if (field.type === 'custom') {
+          if (!value || (typeof value === 'object' && Object.keys(value).length === 0)) {
+            newErrors[field.name] = `${field.label}不能为空`;
+          }
+        } else if (!value && value !== 0) {
+          newErrors[field.name] = `${field.label}不能为空`;
+        }
       }
     });
 
@@ -69,7 +78,7 @@ export default function FormModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
@@ -91,7 +100,9 @@ export default function FormModal({
                   {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 
-                {field.type === 'select' ? (
+                {field.type === 'custom' && field.render ? (
+                  field.render(values[field.name], (value) => handleChange(field.name, value))
+                ) : field.type === 'select' ? (
                   <select
                     value={values[field.name] || ''}
                     onChange={(e) => handleChange(field.name, e.target.value)}

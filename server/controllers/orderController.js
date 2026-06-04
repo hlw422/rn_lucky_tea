@@ -97,7 +97,7 @@ async function getOrdersForAdmin(req, res) {
       params.push(status);
     }
 
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       `SELECT o.id, o.user_id as userId, u.name as userName, u.email as userEmail, 
               o.order_num as orderNum, o.address, o.goods_name as goodsName, 
               o.price, o.order_time as time, o.status 
@@ -105,11 +105,11 @@ async function getOrdersForAdmin(req, res) {
        LEFT JOIN users u ON o.user_id = u.id 
        ${whereClause}
        ORDER BY o.id DESC 
-       LIMIT ? OFFSET ?`,
-      [...params, pageSize, offset]
+       LIMIT ${pageSize} OFFSET ${offset}`,
+      params
     );
 
-    const [total] = await pool.execute(
+    const [total] = await pool.query(
       `SELECT COUNT(*) as count FROM orders o ${whereClause}`,
       params
     );

@@ -49,17 +49,17 @@ async function getGoodsForAdmin(req, res) {
       params.push(categoryId);
     }
 
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       `SELECT g.id, g.category_id as categoryId, c.name as categoryName, g.name, g.characteristic, g.original_price as originalPrice, g.pic 
        FROM goods g 
        LEFT JOIN categories c ON g.category_id = c.id 
        ${whereClause}
        ORDER BY g.id DESC 
-       LIMIT ? OFFSET ?`,
-      [...params, pageSize, offset]
+       LIMIT ${pageSize} OFFSET ${offset}`,
+      params
     );
 
-    const [total] = await pool.execute(
+    const [total] = await pool.query(
       `SELECT COUNT(*) as count FROM goods g ${whereClause}`,
       params
     );

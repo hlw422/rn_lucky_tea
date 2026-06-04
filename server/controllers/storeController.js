@@ -96,12 +96,11 @@ async function getStoresForAdmin(req, res) {
     const pageSize = parseInt(req.query.pageSize) || 20;
     const offset = (page - 1) * pageSize;
 
-    const [rows] = await pool.execute(
-      'SELECT id, name, address, latitude, longitude, business_hours as businessHours, phone, created_at FROM stores ORDER BY id DESC LIMIT ? OFFSET ?',
-      [pageSize, offset]
+    const [rows] = await pool.query(
+      `SELECT id, name, address, latitude, longitude, business_hours as businessHours, phone, created_at FROM stores ORDER BY id DESC LIMIT ${pageSize} OFFSET ${offset}`
     );
 
-    const [total] = await pool.execute('SELECT COUNT(*) as count FROM stores');
+    const [total] = await pool.query('SELECT COUNT(*) as count FROM stores');
 
     res.json({
       code: 0,

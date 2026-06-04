@@ -6,6 +6,7 @@ import DataTable, { Column } from '../components/DataTable';
 import FormModal, { FormField } from '../components/FormModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Pagination from '../components/Pagination';
+import MapPicker from '../components/MapPicker';
 import { storesApi, Store as StoreType } from '../api/stores';
 
 export default function StoresPage() {
@@ -44,10 +45,18 @@ export default function StoresPage() {
   const handleSubmit = async (values: Record<string, any>) => {
     setFormLoading(true);
     try {
+      // 将location对象拆分为latitude和longitude
+      const { location, ...rest } = values;
+      const submitData = {
+        ...rest,
+        latitude: location?.latitude || values.latitude,
+        longitude: location?.longitude || values.longitude,
+      };
+      
       if (editingStore) {
-        await storesApi.update(editingStore.id, values as any);
+        await storesApi.update(editingStore.id, submitData as any);
       } else {
-        await storesApi.create(values as any);
+        await storesApi.create(submitData as any);
       }
       setShowForm(false);
       setEditingStore(null);
@@ -76,8 +85,27 @@ export default function StoresPage() {
   const formFields: FormField[] = [
     { name: 'name', label: '门店名称', type: 'text', required: true, placeholder: '请输入门店名称' },
     { name: 'address', label: '门店地址', type: 'text', required: true, placeholder: '请输入详细地址' },
-    { name: 'latitude', label: '纬度', type: 'number', required: true, step: 0.0000001 },
-    { name: 'longitude', label: '经度', type: 'number', required: true, step: 0.0000001 },
+    { 
+      name: 'location', 
+      label: '门店位置', 
+      type: 'custom',
+      required: true,
+      render: (value, onChange) => {
+        // 从initialValues获取经纬度
+        const lat = editingStore?.latitude || 39.9042;
+        const lng = editingStore?.longitude || 116.4074;
+        return (
+          <MapPicker
+            latitude={lat}
+            longitude={lng}
+            onLocationChange={(newLat, newLng) => {
+              // 同时更新latitude和longitude
+              onChange({ latitude: newLat, longitude: newLng });
+            }}
+          />
+        );
+      }
+    },
     { name: 'businessHours', label: '营业时间', type: 'text', placeholder: '如: 07:00-22:00' },
     { name: 'phone', label: '联系电话', type: 'text', placeholder: '请输入联系电话' },
   ];

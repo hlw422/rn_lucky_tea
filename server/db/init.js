@@ -5,11 +5,11 @@ require('dotenv').config();
 async function initDatabase() {
   // 先创建不指定数据库的连接（用于建库）
   const conn = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root',
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
+    host: process.env.TIDB_HOST || process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.TIDB_PORT || process.env.DB_PORT) || 4000,
+    user: process.env.TIDB_USER || process.env.DB_USER || 'root',
+    password: process.env.TIDB_PASSWORD || process.env.DB_PASSWORD || '',
+    ssl: (process.env.TIDB_SSL || process.env.DB_SSL) === 'true' ? { rejectUnauthorized: true } : undefined,
   });
 
   const dbName = process.env.DB_NAME || 'luckin_coffee';
@@ -17,13 +17,13 @@ async function initDatabase() {
   console.log(`正在初始化数据库: ${dbName}`);
 
   // 创建数据库
-  await conn.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-  await conn.execute(`USE \`${dbName}\``);
+  await conn.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  await conn.query(`USE \`${dbName}\``);
 
   // ========== 建表 ==========
 
   // 用户表
-  await conn.execute(`
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS users (
       id INT AUTO_INCREMENT PRIMARY KEY,
       email VARCHAR(255) NOT NULL UNIQUE,
@@ -39,7 +39,7 @@ async function initDatabase() {
 
   // 如果表已存在但没有 role 字段，添加该字段
   try {
-    await conn.execute(`ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user'`);
+    await conn.query(`ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user'`);
     console.log('✓ users 表已添加 role 字段');
   } catch (err) {
     // 字段已存在时忽略错误
@@ -49,7 +49,7 @@ async function initDatabase() {
   }
 
   // 商品分类表
-  await conn.execute(`
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS categories (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(100) NOT NULL,
@@ -59,7 +59,7 @@ async function initDatabase() {
   console.log('✓ categories 表已创建');
 
   // 商品表
-  await conn.execute(`
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS goods (
       id INT AUTO_INCREMENT PRIMARY KEY,
       category_id INT NOT NULL,
@@ -73,7 +73,7 @@ async function initDatabase() {
   console.log('✓ goods 表已创建');
 
   // 订单表
-  await conn.execute(`
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS orders (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
@@ -89,7 +89,7 @@ async function initDatabase() {
   console.log('✓ orders 表已创建');
 
   // 优惠券表
-  await conn.execute(`
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS coupons (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
@@ -104,7 +104,7 @@ async function initDatabase() {
   console.log('✓ coupons 表已创建');
 
   // 门店表
-  await conn.execute(`
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS stores (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(200) NOT NULL,

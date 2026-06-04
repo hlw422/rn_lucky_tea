@@ -48,3 +48,4 @@ app-example
 # Backend server
 server/.env
 server/node_modules/
+server/*.log
